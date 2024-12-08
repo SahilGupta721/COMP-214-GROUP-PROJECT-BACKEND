@@ -7,21 +7,20 @@ const dbConfig = {
     connectString: '199.212.26.208:1521/SQLD' //your_host:your_port/your_service_name',
   };
 exports.registerCustomer = async (req, res) => {
-    const { customerNumber, firstname, lastname, address, city, state, zip, referred, region, email } = req.body;
-
+    const { customerNumber, lastname, firstname, address, city, state, zip, referred, region, email } = req.body;
 
     try {
         const connection = await oracledb.getConnection(dbConfig);
         // const result = await connection.execute('SELECT * FROM hr_employees');
         const result = await connection.execute(
-            `INSERT INTO jl_customers 
-             (CUSTOMER#, LASTNAME, FIRSTNAME, ADDRESS, CITY, STATE, ZIP, REFERRED, REGION, EMAIL) 
-             VALUES 
-             (:customerNumber, :lastname, :firstname, :address, :city, :state, :zip, :referred, :region, :email)`,
+            `BEGIN
+                sp_register_customer(:customerNumber, :lastname, :firstname,  :address, :city, :state, :zip, :referred, :region, :email);
+            END;`,
             {
                 customerNumber: req.body.customerNumber, // Numeric value for CUSTOMER#
-                lastname: req.body.lastname,             // String (up to 10 characters)
-                firstname: req.body.firstname,           // String (up to 10 characters)
+                                                            // String (up to 10 characters)
+                lastname: req.body.lastname,  
+                firstname: req.body.firstname,            // String (up to 10 characters)
                 address: req.body.address,               // String (up to 20 characters)
                 city: req.body.city,                     // String (up to 12 characters)
                 state: req.body.state,                   // String (2 characters)
@@ -61,38 +60,3 @@ exports.updateCustomer = async (req, res) => {
     }
 };
 
-
-//register a customer
-
-// CREATE OR REPLACE PROCEDURE sp_register_customer (
-//     par_cust_id   IN JL_CUSTOMERS.CUST_ID%TYPE,
-//     par_name      IN JL_CUSTOMERS.NAME%TYPE,
-//     par_email     IN JL_CUSTOMERS.EMAIL%TYPE,
-//     par_address   IN JL_CUSTOMERS.ADDRESS%TYPE
-// ) AS
-// BEGIN
-//     INSERT INTO JL_CUSTOMERS (CUST_ID, NAME, EMAIL, ADDRESS)
-//     VALUES (par_cust_id, par_name, par_email, par_address);
-//     COMMIT;
-// END;
-// /
-
-//update customer
-
-// CREATE OR REPLACE PROCEDURE sp_update_customer (
-//     par_cust_id   IN JL_CUSTOMERS.CUST_ID%TYPE,
-//     par_email     IN JL_CUSTOMERS.EMAIL%TYPE,
-//     par_address   IN JL_CUSTOMERS.ADDRESS%TYPE,
-//     par_region    IN JL_CUSTOMERS.REGION%TYPE,
-//     par_state     IN JL_CUSTOMERS.STATE%TYPE
-// ) AS
-// BEGIN
-//     UPDATE JL_CUSTOMERS
-//     SET EMAIL = par_email,
-//         ADDRESS = par_address,
-//         REGION = par_region,
-//         STATE = par_state
-//     WHERE CUST_ID = par_cust_id;
-//     COMMIT;
-// END;
-// /
