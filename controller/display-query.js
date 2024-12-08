@@ -14,9 +14,7 @@ const dbConfig = {
       const result = await connection.execute('SELECT * FROM hr_employees');
       res.json(result.rows);
     }
-    
     catch(error){
         console.log(error);
-        res.status(500).json({ error: 'Failed to fetch data from the database' }); // Return error response
     } 
   }

@@ -84,15 +84,53 @@ exports.updateBook = async (req, res) => {
 
 // List all books
 exports.listBooks = async (req, res) => {
+    let connection;
     try {
-        const connection = await oracledb.getConnection(dbConfig);
+        // Establish connection to Oracle DB
+        connection = await oracledb.getConnection(dbConfig);
+
+        // Prepare the OUT parameter to receive the result set
         const result = await connection.execute(
-            `SELECT * FROM JL_BOOKS`
+            `BEGIN get_books(:p_books); END;`,
+            {
+                p_books: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
+            }
         );
 
-        res.status(200).json(result.rows);
+        // Extract the cursor from the result
+        const cursor = result.outBinds.p_books;
+        const books = [];
+
+        // Loop through the cursor and map the results to the books array
+        let row;
+        while ((row = await cursor.getRow())) {
+            books.push({
+                isbn: row[0],        // ISBN is the first column
+                title: row[1],       // Title is the second column
+                pubDate: row[2],     // PubDate is the third column
+                pubId: row[3],       // PubId is the fourth column
+                cost: row[4],        // Cost is the fifth column
+                retail: row[5],      // Retail is the sixth column
+                discount: row[6],    // Discount is the seventh column
+                category: row[7]     // Category is the eighth column
+            });
+        }
+
+        // Close the cursor
+        await cursor.close();
+
+        // Send the books as a JSON response
+        res.json(books);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error listing books.', details: err.message });
+        console.error('Error fetching books:', err);
+        res.status(500).json({ error: 'Error fetching books.', details: err.message });
+    } finally {
+        if (connection) {
+            try {
+                await connection.close(); // Always close the connection
+            } catch (closeErr) {
+                console.error('Error closing connection:', closeErr);
+            }
+        }
     }
 };
