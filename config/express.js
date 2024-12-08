@@ -8,6 +8,10 @@ var indexRouter = require('../routes/index');
 var usersRouter = require('../routes/users');
 var usercontroller=require('../controller/display-query');
 
+var bookRoutes = require('../routes/books'); // Import book routes
+const customerRoutes = require('../routes/customers');// import customersroot
+const authorRoutes = require('../routes/authors'); // Import author routes
+
 var app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -24,6 +28,9 @@ app.use(cookieParser());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/display', usercontroller.display);
+app.use('/books', bookRoutes); // Route for book-related actions
+app.use('/customers', customerRoutes);
+app.use('/authors', authorRoutes); 
 
 
 // catch 404 and forward to error handler
