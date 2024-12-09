@@ -60,25 +60,54 @@ exports.registerBook = async (req, res) => {
         }
     }
 };
-
 // Update a book
 exports.updateBook = async (req, res) => {
-    const { isbn, category, cost, retail } = req.body;
+    const isbn = req.params.isbn;  // ISBN from URL
+    const { category, cost, retail } = req.body;  // Other details from body
+
+    console.log("Received ISBN:", isbn);  // For debugging
+    console.log("Received category:", category);
+    console.log("Received cost:", cost);
+    console.log("Received retail:", retail);
+    
+    let connection;
 
     try {
-        const connection = await oracledb.getConnection(dbConfig);
-        const result = await connection.execute(
-            `UPDATE JL_BOOKS 
-             SET CATEGORY = :category, COST = :cost, RETAIL = :retail 
-             WHERE ISBN = :isbn`,
-            { category, cost, retail, isbn }
-        );
+        connection = await oracledb.getConnection(dbConfig);
 
-        await connection.commit();
-        res.status(200).json({ message: 'Book updated successfully!', result });
+        // SQL to update the book directly
+        const sql = `
+            UPDATE JL_BOOKS
+            SET CATEGORY = :category,
+                COST = :cost,
+                RETAIL = :retail
+            WHERE ISBN = :isbn
+        `;
+
+        // Bind parameters
+        const binds = {
+            isbn: isbn,              // ISBN from the URL
+            category: category,      // Category from the body
+            cost: parseFloat(cost),  // Cost from the body, converted to a number
+            retail: parseFloat(retail) // Retail price from the body, converted to a number
+        };
+
+        // Execute the update query
+        const result = await connection.execute(sql, binds, { autoCommit: true });
+
+        // Check if any rows were updated
+        if (result.rowsAffected === 0) {
+            return res.status(404).json({ error: 'No book found with the specified ISBN.' });
+        }
+
+        // Send success response
+        res.status(200).json({ message: 'Book updated successfully!' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error updating book.', details: err.message });
+    } finally {
+        // Ensure the connection is always released if it was created
+        if (connection) await connection.close();
     }
 };
 
@@ -132,5 +161,45 @@ exports.listBooks = async (req, res) => {
                 console.error('Error closing connection:', closeErr);
             }
         }
+    }
+};
+
+exports.deleteBook = async (req, res) => {
+    const isbn = req.params.isbn;  // ISBN from URL
+    
+    console.log("Received ISBN:", isbn);  // For debugging
+    
+    let connection;
+
+    try {
+        connection = await oracledb.getConnection(dbConfig);
+
+        // SQL to delete the book
+        const sql = `
+            DELETE FROM JL_BOOKS
+            WHERE ISBN = :isbn
+        `;
+
+        // Bind parameters
+        const binds = {
+            isbn: isbn,  // ISBN from the URL
+        };
+
+        // Execute the delete query
+        const result = await connection.execute(sql, binds, { autoCommit: true });
+
+        // Check if any rows were deleted
+        if (result.rowsAffected === 0) {
+            return res.status(404).json({ error: 'No book found with the specified ISBN.' });
+        }
+
+        // Send success response
+        res.status(200).json({ message: 'Book deleted successfully!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error deleting book.', details: err.message });
+    } finally {
+        // Ensure the connection is always released if it was created
+        if (connection) await connection.close();
     }
 };
