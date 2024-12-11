@@ -112,6 +112,7 @@ exports.updateBook = async (req, res) => {
 };
 
 // List all books
+
 exports.listBooks = async (req, res) => {
     let connection;
     try {
@@ -120,7 +121,7 @@ exports.listBooks = async (req, res) => {
 
         // Prepare the OUT parameter to receive the result set
         const result = await connection.execute(
-            `BEGIN get_books(:p_books); END;`,
+            `BEGIN geokt_bos(:p_books); END;`,
             {
                 p_books: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
             }
@@ -164,42 +165,42 @@ exports.listBooks = async (req, res) => {
     }
 };
 
-exports.deleteBook = async (req, res) => {
-    const isbn = req.params.isbn;  // ISBN from URL
+// exports.deleteBook = async (req, res) => {
+//     const isbn = req.params.isbn;  // ISBN from URL
     
-    console.log("Received ISBN:", isbn);  // For debugging
+//     console.log("Received ISBN:", isbn);  // For debugging
     
-    let connection;
+//     let connection;
 
-    try {
-        connection = await oracledb.getConnection(dbConfig);
+//     try {
+//         connection = await oracledb.getConnection(dbConfig);
 
-        // SQL to delete the book
-        const sql = `
-            DELETE FROM JL_BOOKS
-            WHERE ISBN = :isbn
-        `;
+//         // SQL to delete the book
+//         const sql = `
+//             DELETE FROM JL_BOOKS
+//             WHERE ISBN = :isbn
+//         `;
 
-        // Bind parameters
-        const binds = {
-            isbn: isbn,  // ISBN from the URL
-        };
+//         // Bind parameters
+//         const binds = {
+//             isbn: isbn,  // ISBN from the URL
+//         };
 
-        // Execute the delete query
-        const result = await connection.execute(sql, binds, { autoCommit: true });
+//         // Execute the delete query
+//         const result = await connection.execute(sql, binds, { autoCommit: true });
 
-        // Check if any rows were deleted
-        if (result.rowsAffected === 0) {
-            return res.status(404).json({ error: 'No book found with the specified ISBN.' });
-        }
+//         // Check if any rows were deleted
+//         if (result.rowsAffected === 0) {
+//             return res.status(404).json({ error: 'No book found with the specified ISBN.' });
+//         }
 
-        // Send success response
-        res.status(200).json({ message: 'Book deleted successfully!' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error deleting book.', details: err.message });
-    } finally {
-        // Ensure the connection is always released if it was created
-        if (connection) await connection.close();
-    }
-};
+//         // Send success response
+//         res.status(200).json({ message: 'Book deleted successfully!' });
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ error: 'Error deleting book.', details: err.message });
+//     } finally {
+//         // Ensure the connection is always released if it was created
+//         if (connection) await connection.close();
+//     }
+// };

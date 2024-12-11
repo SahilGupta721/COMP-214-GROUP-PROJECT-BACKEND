@@ -7,8 +7,10 @@ router.get('/', function(req, res, next) {
   });
 // Route for customer registration
 router.post('/register', customerController.registerCustomer);
+router.get('/list', customerController.listAllCustomers);
 
 // Route for updating customer details
-router.put('/update', customerController.updateCustomer);
+router.put('/update/:cust_id', customerController.updateCustomer);
+
 
 module.exports = router;
