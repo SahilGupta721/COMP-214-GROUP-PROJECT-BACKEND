@@ -16,5 +16,6 @@ const dbConfig = {
     }
     catch(error){
         console.log(error);
+        res.status(500).json({ error: 'Failed to fetch data from the database' }); // Return error response
     } 
   }
